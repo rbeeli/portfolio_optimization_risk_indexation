@@ -24,7 +24,7 @@ dateEnd = datenum('31.08.2019','dd.mm.yyyy');
 
 method = 'unconstr'; % 'constr' for short sales constraints; 'unconstr' for unconstrained optimization
 retFreq = 12; % DO NOT CHANGE! must be 12 for monthly return data, 52 for weekly return data
-showTS = 'off'; % Display chart with asset class time series: 'on' or 'off'
+showTS = 'on'; % Display chart with asset class time series: 'on' or 'off'
 showFrontier = 'on'; % Display efficient frontier: 'on' or 'off'
 showAssetClasses = 'on'; % Display Asset Classes: 'on' or 'off'
 showFrontierAllocations = 'on'; % Display frontier allocations: 'on' or 'off'

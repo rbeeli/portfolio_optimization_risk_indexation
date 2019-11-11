@@ -16,7 +16,7 @@ function[] = doBacktest()
 %% Input Parameters
 
 close all force
-clc
+%clc
 
 
 dateStart = datenum('31.01.1972','dd.mm.yyyy');
