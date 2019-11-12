@@ -29,8 +29,8 @@ libdata.summary_stats(simpleRets, cumRets, frequency)
 libbacktest = backtest();
 strategies = libbacktest.strategies;
 
-estimationPeriod = 5 * frequency; % 5 years
-rebalancingInterval = 1 * frequency; % every 1 year
+estimationPeriod = 1 * frequency; % 5 years
+rebalancingInterval = 6/12 * frequency; % every 1 year
 
 
 
@@ -113,7 +113,7 @@ subplot(2, 1, 2); plot_returns('Asset class returns', cumRets)
 % subplot(3, 2, 5); plot_returns('Commodities', cumRets(:, 13))
 
 function plot_returns(plot_title, returns)
-    plot(returns.Date, returns{:, :})
+    semilogy(returns.Date, returns{:, :})
     title(plot_title)
     
     if size(returns, 2) < 20
