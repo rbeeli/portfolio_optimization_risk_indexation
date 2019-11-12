@@ -7,12 +7,15 @@ end
 
 
 function weights = MinVariance(ExpRet, CovMat, allowShortselling)
+%     iota = ones(size(CovMat, 1), 1);
+%     weights = (inv(CovMat)*iota)/(iota' * inv(CovMat)*iota)';
+
     numAssets = length(ExpRet);
     V0 = zeros(1, numAssets);
     V1 = ones(1, numAssets);
 
     % set constraints
-    UB = ones(numAssets,1);
+    UB = 0.3 * ones(numAssets,1);
     LB = zeros(numAssets,1);
     
     if allowShortselling
@@ -57,8 +60,14 @@ end
 function weights = MaxSharpeRatio(ExpRet, CovMat)
     % http://people.stat.sc.edu/sshen/events/backtesting/reference/maximizing%20the%20sharpe%20ratio.pdf
     
-    p = Portfolio('AssetMean',ExpRet, 'AssetCovar',CovMat);
+    p = Portfolio('AssetMean',ExpRet, 'AssetCovar',CovMat, 'UpperBound',0.4);
+    
+    % constraints
     p = setDefaultConstraints(p);
+    lb = repelem(0, size(CovMat, 1))';
+    ub = repelem(0.3, size(CovMat, 1))';
+    p = setBounds(p, lb, ub);
+
     p = setSolver(p,'quadprog',...
                     'Display','off',...
                     'ConstraintTolerance',1.0e-8,...
