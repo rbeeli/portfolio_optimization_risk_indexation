@@ -7,9 +7,6 @@ end
 
 
 function weights = MinVariance(ExpRet, CovMat, allowShortselling)
-%     iota = ones(size(CovMat, 1), 1);
-%     weights = (inv(CovMat)*iota)/(iota' * inv(CovMat)*iota)';
-
     numAssets = length(ExpRet);
     V0 = zeros(1, numAssets);
     V1 = ones(1, numAssets);
@@ -119,8 +116,6 @@ end
 
 
 function weights = EqualRiskContribution(ExpRet, CovMat)
-
-    
     weight = 1/size(CovMat, 1);
     weights = repelem(weight, size(CovMat, 1))';
     

@@ -79,7 +79,7 @@ disp([strategyRets.Properties.VariableNames' num2cell(SR)]);
 figure(1)
 for i=1:size(wgts, 2)
     iWgts = wgts{i};
-    plot_title = strcat('Allocation over time: ', strategyRets.Properties.VariableNames{i});
+    plot_title = strcat("Allocation over time: ", strategyRets.Properties.VariableNames{i});
     legend_items = simpleRets.Properties.VariableNames;
     
     subplot(size(wgts, 2), 1, i);
@@ -120,3 +120,15 @@ function plot_returns(plot_title, returns)
         legend(returns.Properties.VariableNames, 'Interpreter','none', 'Location','NorthEastOutside')
     end
 end
+
+
+
+
+
+
+
+
+
+
+
+
