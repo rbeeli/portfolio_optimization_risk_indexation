@@ -3,91 +3,129 @@ clc; clear; close all force;
 % load data
 libdata = data();
 
-
 % lecture dataset
-[lecRets, frequency] = libdata.read_lecture_dataset();
-lecRets = removevars(lecRets, {'Cash CHF'});
-simpleRets = lecRets;
+[lecRets, frequency] = libdata.readLectureDataset();
+rets = lecRets;
 
 % S&P 500 dataset
-% [sp500IdxRets, sp500StockRets, frequency] = libdata.read_sp500_dataset();
-
+% [sp500IdxRets, sp500StockRets, frequency] = libdata.readSP500Dataset();
 % simpleRets = sp500StockRets;
-
 % simpleRets = sp500IdxRets;
-% simpleRets = addvars(simpleRets, nanmean(sp500StockRets{:, :}, 2), 'NewVariableNames', {'Manual EW'});
 
-names = simpleRets.Properties.VariableNames;
-cumRets = libdata.cumulative_returns(simpleRets);
+cumRets = libdata.cumulativeReturns(rets);
 
 % data summary statistics
-libdata.summary_stats(simpleRets, cumRets, frequency)
+libdata.summaryStats(rets, frequency)
 
 
 
 % backtest
 libbacktest = backtest();
-strategies = libbacktest.strategies;
+librets = expectedReturnsEstimation();
+libcov = covarianceEstimation();
+libportopt = portfolioOptimizer();
 
-estimationPeriod = 1 * frequency; % 5 years
-rebalancingInterval = 6/12 * frequency; % every 1 year
+estimationWindow = 12/12 * frequency;
+estimationInterval = 3/12 * frequency;
+startIndex = estimationWindow + 1;
+
+movingWndDataFunc = @(rets, idx) libdata.extractWindow(rets, idx, estimationWindow);
+movingWndFutureDataFunc = @(rets, idx) libdata.extractWindow(rets, idx + estimationWindow, estimationWindow);
 
 
+% 1/N
+cfg1 = BacktestConfig('1/N');
+cfg1.ExpectedRetsFunc = @librets.expMovingAverage;
+cfg1.ExpectedRetsDataFunc = movingWndDataFunc;
+cfg1.CovFunc = @libcov.sampleCovShrinkageOAS;
+cfg1.CovDataFunc = movingWndDataFunc;
+cfg1.PortOptimizerFunc = @libportopt.EqualWeights;
+cfg1.EstimationInterval = estimationInterval;
+cfg1.RebalancingInterval = estimationInterval;
+cfg1.Returns = rets;
+cfg1.Securities = rets.Properties.VariableNames;
+cfg1.StartIndex = startIndex;
 
-wgts = cell(1, 4);
-
-% 1/N Equal Weighted
-[wgts1, rets1, sec1] = libbacktest.backtest(strategies.EqualWeighted, simpleRets, estimationPeriod, rebalancingInterval);
-cumRets1 = libdata.cumulative_returns(rets1);
-wgts{1} = wgts1;
-
-% M/V minimum variance
-[wgts2, rets2, sec2] = libbacktest.backtest(strategies.MinVariance, simpleRets, estimationPeriod, rebalancingInterval);
-cumRets2 = libdata.cumulative_returns(rets2);
-wgts{2} = wgts2;
+% Minimum Variance
+cfg2 = BacktestConfig('Minimum Variance');
+cfg2.ExpectedRetsFunc = @librets.expMovingAverage;
+cfg2.ExpectedRetsDataFunc = movingWndDataFunc;
+cfg2.CovFunc = @libcov.sampleCovShrinkageOAS;
+cfg2.CovDataFunc = movingWndDataFunc;
+cfg2.PortOptimizerFunc = @libportopt.MinVariance;
+cfg2.EstimationInterval = estimationInterval;
+cfg2.RebalancingInterval = estimationInterval;
+cfg2.Returns = rets;
+cfg2.Securities = rets.Properties.VariableNames;
+cfg2.StartIndex = startIndex;
 
 % Maximum Sharpe Ratio
-[wgts3, rets3, sec3] = libbacktest.backtest(strategies.MaxSharpeRatio, simpleRets, estimationPeriod, rebalancingInterval);
-cumRets3 = libdata.cumulative_returns(rets3);
-wgts{3} = wgts3;
+cfg3 = BacktestConfig('Maximum Sharpe Ratio');
+cfg3.ExpectedRetsFunc = @librets.expMovingAverage;
+cfg3.ExpectedRetsDataFunc = movingWndDataFunc;
+cfg3.CovFunc = @libcov.sampleCovShrinkageOAS;
+cfg3.CovDataFunc = movingWndDataFunc;
+cfg3.PortOptimizerFunc = @libportopt.MaxSharpeRatio;
+cfg3.EstimationInterval = estimationInterval;
+cfg3.RebalancingInterval = estimationInterval;
+cfg3.Returns = rets;
+cfg3.Securities = rets.Properties.VariableNames;
+cfg3.StartIndex = startIndex;
 
-% Equal Risk Contribution
-[wgts4, rets4, sec4] = libbacktest.backtest(strategies.EqualRiskContribution, simpleRets, estimationPeriod, rebalancingInterval);
-cumRets4 = libdata.cumulative_returns(rets4);
-wgts{4} = wgts4;
+% Maximum SR (perfect information)
+cfg4 = BacktestConfig('Maximum Sharpe Ratio (perfect information)');
+cfg4.ExpectedRetsFunc = @librets.arithmeticMean;
+cfg4.ExpectedRetsDataFunc = movingWndFutureDataFunc;
+cfg4.CovFunc = @libcov.sampleCovShrinkageOAS;
+cfg4.CovDataFunc = movingWndFutureDataFunc;
+cfg4.PortOptimizerFunc = @libportopt.MaxSharpeRatio;
+cfg4.EstimationInterval = estimationInterval;
+cfg4.RebalancingInterval = estimationInterval;
+cfg4.Returns = rets;
+cfg4.Securities = rets.Properties.VariableNames;
+cfg4.StartIndex = startIndex;
+
+% list of backtest configs
+bCfg = {cfg1, cfg2, cfg3, cfg4};
+
+% list of backtest results
+bRes = {};
+
+% all backtest portfolio returns in timetable
+bRets = timetable(rets.Date);
+bRets.Properties.DimensionNames = {'Date', 'Returns'};
+
+for i=1:length(bCfg)
+    bRes{i} = libbacktest.execute(bCfg{i});
+    bRets = addvars(bRets, bRes{i}.PortfolioReturns{:, 1}, 'NewVariableNames', bCfg{i}.Name);
+end
+
+% cumulative portfolio returns
+bCumRets = libdata.cumulativeReturns(bRets);
+
+% Sharpe ratios
+SR = libdata.sharpeRatio(bRets, frequency);
+disp("\nPortfolio Sharpe Ratios");
+disp([bRets.Properties.VariableNames' num2cell(SR)]);
 
 
 
 
 
-strategyRets = timetable(simpleRets.Date, rets1{:, 1}, rets2{:, 1}, rets3{:, 1}, rets4{:, 1});
-strategyRets.Properties.DimensionNames{1} = 'Date';
-strategyRets.Properties.VariableNames = {'1/N' 'M/V minimum variance' 'Maximum Sharpe Ratio' 'Equal Risk Contribution'};
-
-strategyCumRets = timetable(simpleRets.Date, cumRets1{:, 1}, cumRets2{:, 1}, cumRets3{:, 1}, cumRets4{:, 1});
-strategyCumRets.Properties.DimensionNames{1} = 'Date';
-strategyCumRets.Properties.VariableNames = {'1/N' 'M/V minimum variance' 'Maximum Sharpe Ratio' 'Equal Risk Contribution'};
-
-% Sharpe Ratios
-SR = libdata.sharpe_ratio(strategyRets, frequency);
-disp('Strategies Sharpe Ratios');
-disp([strategyRets.Properties.VariableNames' num2cell(SR)]);
-
+libvis = visualize();
 
 
 
 figure(1)
-for i=1:size(wgts, 2)
-    iWgts = wgts{i};
-    plot_title = strcat("Allocation over time: ", strategyRets.Properties.VariableNames{i});
-    legend_items = simpleRets.Properties.VariableNames;
+for i=1:length(bRes)
+    wgts = bRes{i}.PortfolioWeights;
     
-    subplot(size(wgts, 2), 1, i);
-    area(iWgts{:, :})
-    legend(legend_items, 'Location', 'NorthEastOutside')
-    title(plot_title)
+    subplot(length(bRes), 1, i);
+    area(wgts{:, :})
+    legend(bRes{i}.Config.Securities, 'Location', 'NorthEastOutside')
+    title(strcat("Allocation over time: ", bRes{i}.Config.Name))
     ylabel('Allocation')
-    axis([estimationPeriod size(wgts3, 1) 0 1])
+    axis([bRes{i}.Config.StartIndex size(wgts, 1) 0 1])
     % set(gca, 'XTick', ticks)
     % set(gca, 'XTickLabel', datestr(xTickNames,12))
 end
@@ -99,32 +137,18 @@ end
 
 % plot strategy returns
 figure(2)
-subplot(2, 1, 1); plot_returns('Strategy cumulative returns', strategyCumRets)
+subplot(2, 1, 1); libvis.plotReturns('Strategy cumulative returns', bCumRets)
 
 
 
 % plot returns of asset classes
 % figure(2)
-subplot(2, 1, 2); plot_returns('Asset class returns', cumRets)
-% subplot(3, 2, 1); plot_returns('Cash', cumRets(:, 1))
-% subplot(3, 2, 2); plot_returns('Bonds', cumRets(:, 2:6))
-% subplot(3, 2, 3); plot_returns('Equities', cumRets(:, 7:10))
-% subplot(3, 2, 4); plot_returns('Alternative', cumRets(:, 11:12))
-% subplot(3, 2, 5); plot_returns('Commodities', cumRets(:, 13))
-
-function plot_returns(plot_title, returns)
-    semilogy(returns.Date, returns{:, :})
-    title(plot_title)
-    
-    if size(returns, 2) < 20
-        legend(returns.Properties.VariableNames, 'Interpreter','none', 'Location','NorthEastOutside')
-    end
-end
-
-
-
-
-
+subplot(2, 1, 2); libvis.plotReturns('Asset class returns', cumRets)
+% subplot(3, 2, 1); libvis.plotReturns('Cash', cumRets(:, 1))
+% subplot(3, 2, 2); libvis.plotReturns('Bonds', cumRets(:, 2:6))
+% subplot(3, 2, 3); libvis.plotReturns('Equities', cumRets(:, 7:10))
+% subplot(3, 2, 4); libvis.plotReturns('Alternative', cumRets(:, 11:12))
+% subplot(3, 2, 5); libvis.plotReturns('Commodities', cumRets(:, 13))
 
 
 

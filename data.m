@@ -1,13 +1,14 @@
 function funcs = data()
-    funcs.read_lecture_dataset = @read_lecture_dataset;
-    funcs.cumulative_returns = @cumulative_returns;
-    funcs.summary_stats = @summary_stats;
-    funcs.read_sp500_dataset = @read_sp500_dataset;
-    funcs.sharpe_ratio = @sharpe_ratio;
+    funcs.readLectureDataset = @readLectureDataset;
+    funcs.cumulativeReturns = @cumulativeReturns;
+    funcs.summaryStats = @summaryStats;
+    funcs.readSP500Dataset = @readSP500Dataset;
+    funcs.sharpeRatio = @sharpeRatio;
+    funcs.extractWindow = @extractWindow;
 end
 
 
-function [indexRets, stockRets, frequency] = read_sp500_dataset()
+function [indexRets, stockRets, frequency] = readSP500Dataset()
     % read Excel
     indexRets = readtable('data/SP500/sp500_index_monthly.csv', 'ReadVariableNames',true, 'PreserveVariableNames',true);
     stockRets = readtable('data/SP500/sp500_stock_returns.csv', 'ReadVariableNames',true, 'PreserveVariableNames',true);
@@ -29,16 +30,16 @@ function [indexRets, stockRets, frequency] = read_sp500_dataset()
 end
 
 
-function [returns, frequency] = read_lecture_dataset()
+function [returns, frequency] = readLectureDataset()
     % read Excel
     returns = readtable('data/Seminar APT 2019 - Returns V2.xlsx', 'ReadVariableNames',true, 'PreserveVariableNames',true);
-    returns = removevars(returns, {
-        'ILS (desmoothed)',...
-        'Liability Proxy 1-3 years',...
-        'Liability Proxy 3-5 years',...
-        'Liability Proxy 5-7 years',...
-        'Liability Proxy 10+ years'
-    });
+%     returns = removevars(returns, {
+%         'ILS (desmoothed)',...
+%         'Liability Proxy 1-3 years',...
+%         'Liability Proxy 3-5 years',...
+%         'Liability Proxy 5-7 years',...
+%         'Liability Proxy 10+ years'
+%     });
     returns.Properties.VariableNames(1) = {'Date'};
 
     % parse date
@@ -52,15 +53,15 @@ function [returns, frequency] = read_lecture_dataset()
 end
 
 
-function cumReturns = cumulative_returns(simpleReturns)
+function cumReturns = cumulativeReturns(simpleRets)
     % create copy of returns table with NaNs
-    cumReturns = simpleReturns;
+    cumReturns = simpleRets;
     cumReturns{:, :} = nan;
     
     % compute column-wise compound returns.
     % ignores NaN values.
-    for col = 1:size(simpleReturns, 2)
-        returns = simpleReturns{:, col};
+    for col = 1:size(simpleRets, 2)
+        returns = simpleRets{:, col};
         
         % ignore NaN rows for returns calculation
         data_indices = find(~isnan(returns));
@@ -69,10 +70,11 @@ function cumReturns = cumulative_returns(simpleReturns)
 end
 
 
-function stats = summary_stats(simpleRets, cumRets, frequency)
+function stats = summaryStats(simpleRets, frequency)
     nAssets = size(simpleRets, 2);
     periods = sum(~isnan(simpleRets{:, :}));
     years = periods'/frequency;
+    cumRets = cumulativeReturns(simpleRets);
     
     statReturns = NaN(nAssets, 1);
     statVol = NaN(nAssets, 1);
@@ -99,7 +101,7 @@ function stats = summary_stats(simpleRets, cumRets, frequency)
 end
 
 
-function SR = sharpe_ratio(simpleRets, frequency)
+function SR = sharpeRatio(simpleRets, frequency)
     nAssets = size(simpleRets, 2);
     SR = NaN(nAssets, 1);
     
@@ -114,3 +116,16 @@ function SR = sharpe_ratio(simpleRets, frequency)
 end
 
 
+function windowRets = extractWindow(returns, position, lookbackWindow)
+    % Extracts a data window of size "lookbackWindow" up to
+    % row "position", but not including it.
+    %
+    % Example:
+    %    position=10
+    %    lookbackWindow=3
+    %    idxFrom=7
+    %    idxTo=9
+    idxFrom = max(1, position - lookbackWindow);
+    idxTo = min(size(returns, 1), position - 1);
+    windowRets = returns{idxFrom:idxTo, :};
+end
