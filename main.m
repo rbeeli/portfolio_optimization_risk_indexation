@@ -1,18 +1,13 @@
 clc; clear; close all force;
 
+addpath('classes');
+
 % load data
-libdata = data();
+libdata = libdata();
 
 % lecture dataset
 [lecRets, frequency] = libdata.readLectureDataset();
 rets = lecRets;
-
-% S&P 500 dataset
-% [sp500IdxRets, sp500StockRets, frequency] = libdata.readSP500Dataset();
-% simpleRets = sp500StockRets;
-% simpleRets = sp500IdxRets;
-
-cumRets = libdata.cumulativeReturns(rets);
 
 % data summary statistics
 libdata.summaryStats(rets, frequency)
@@ -20,13 +15,13 @@ libdata.summaryStats(rets, frequency)
 
 
 % backtest
-libbacktest = backtest();
-librets = expectedReturnsEstimation();
-libcov = covarianceEstimation();
-libportopt = portfolioOptimizer();
+librets = libreturns();
+libcov = libcovariance();
+libopt = liboptimizer();
 
-estimationWindow = 12/12 * frequency;
-estimationInterval = 3/12 * frequency;
+estimationWindow = 5 * frequency;
+optimizationInterval = 1 * frequency;
+rebalancingInterval = 1 * frequency;
 startIndex = estimationWindow + 1;
 
 movingWndDataFunc = @(rets, idx) libdata.extractWindow(rets, idx, estimationWindow);
@@ -34,125 +29,199 @@ movingWndFutureDataFunc = @(rets, idx) libdata.extractWindow(rets, idx + estimat
 
 
 % 1/N
-cfg1 = BacktestConfig('1/N');
-cfg1.ExpectedRetsFunc = @librets.expMovingAverage;
-cfg1.ExpectedRetsDataFunc = movingWndDataFunc;
-cfg1.CovFunc = @libcov.sampleCovShrinkageOAS;
-cfg1.CovDataFunc = movingWndDataFunc;
-cfg1.PortOptimizerFunc = @libportopt.EqualWeights;
-cfg1.EstimationInterval = estimationInterval;
-cfg1.RebalancingInterval = estimationInterval;
-cfg1.Returns = rets;
-cfg1.Securities = rets.Properties.VariableNames;
-cfg1.StartIndex = startIndex;
+EQW = BacktestConfig('1/N');
+EQW.ExpectedRetsFunc = @librets.expMovingAverage;
+EQW.ExpectedRetsDataFunc = movingWndDataFunc;
+EQW.CovFunc = @libcov.sampleCovShrinkageOAS;
+EQW.CovDataFunc = movingWndDataFunc;
+EQW.PortOptimizerFunc = @libopt.EqualWeights;
+EQW.OptimizationInterval = optimizationInterval;
+EQW.RebalancingInterval = rebalancingInterval;
+EQW.Returns = rets;
+EQW.Securities = rets.Properties.VariableNames;
+EQW.StartIndex = startIndex;
 
 % Minimum Variance
-cfg2 = BacktestConfig('Minimum Variance');
-cfg2.ExpectedRetsFunc = @librets.expMovingAverage;
-cfg2.ExpectedRetsDataFunc = movingWndDataFunc;
-cfg2.CovFunc = @libcov.sampleCovShrinkageOAS;
-cfg2.CovDataFunc = movingWndDataFunc;
-cfg2.PortOptimizerFunc = @libportopt.MinVariance;
-cfg2.EstimationInterval = estimationInterval;
-cfg2.RebalancingInterval = estimationInterval;
-cfg2.Returns = rets;
-cfg2.Securities = rets.Properties.VariableNames;
-cfg2.StartIndex = startIndex;
+MinVar = BacktestConfig('Minimum Variance');
+MinVar.ExpectedRetsFunc = @librets.expMovingAverage;
+MinVar.ExpectedRetsDataFunc = movingWndDataFunc;
+MinVar.CovFunc = @libcov.sampleCovShrinkageOAS;
+MinVar.CovDataFunc = movingWndDataFunc;
+MinVar.PortOptimizerFunc = @libopt.MinVariance;
+MinVar.OptimizationInterval = optimizationInterval;
+MinVar.RebalancingInterval = rebalancingInterval;
+MinVar.Returns = rets;
+MinVar.Securities = rets.Properties.VariableNames;
+MinVar.StartIndex = startIndex;
 
 % Maximum Sharpe Ratio
-cfg3 = BacktestConfig('Maximum Sharpe Ratio');
-cfg3.ExpectedRetsFunc = @librets.expMovingAverage;
-cfg3.ExpectedRetsDataFunc = movingWndDataFunc;
-cfg3.CovFunc = @libcov.sampleCovShrinkageOAS;
-cfg3.CovDataFunc = movingWndDataFunc;
-cfg3.PortOptimizerFunc = @libportopt.MaxSharpeRatio;
-cfg3.EstimationInterval = estimationInterval;
-cfg3.RebalancingInterval = estimationInterval;
-cfg3.Returns = rets;
-cfg3.Securities = rets.Properties.VariableNames;
-cfg3.StartIndex = startIndex;
+MSR = BacktestConfig('Maximum Sharpe Ratio');
+MSR.ExpectedRetsFunc = @librets.expMovingAverage;
+MSR.ExpectedRetsDataFunc = movingWndDataFunc;
+MSR.CovFunc = @libcov.sampleCovShrinkageOAS;
+MSR.CovDataFunc = movingWndDataFunc;
+MSR.PortOptimizerFunc = @libopt.MaxSharpeRatio;
+MSR.OptimizationInterval = optimizationInterval;
+MSR.RebalancingInterval = rebalancingInterval;
+MSR.Returns = rets;
+MSR.Securities = rets.Properties.VariableNames;
+MSR.StartIndex = startIndex;
 
 % Maximum SR (perfect information)
-cfg4 = BacktestConfig('Maximum Sharpe Ratio (perfect information)');
-cfg4.ExpectedRetsFunc = @librets.arithmeticMean;
-cfg4.ExpectedRetsDataFunc = movingWndFutureDataFunc;
-cfg4.CovFunc = @libcov.sampleCovShrinkageOAS;
-cfg4.CovDataFunc = movingWndFutureDataFunc;
-cfg4.PortOptimizerFunc = @libportopt.MaxSharpeRatio;
-cfg4.EstimationInterval = estimationInterval;
-cfg4.RebalancingInterval = estimationInterval;
-cfg4.Returns = rets;
-cfg4.Securities = rets.Properties.VariableNames;
-cfg4.StartIndex = startIndex;
+MSRP = BacktestConfig('Maximum Sharpe Ratio (perfect information)');
+MSRP.ExpectedRetsFunc = @librets.arithmeticMean;
+MSRP.ExpectedRetsDataFunc = movingWndFutureDataFunc;
+MSRP.CovFunc = @libcov.sampleCovShrinkageOAS;
+MSRP.CovDataFunc = movingWndFutureDataFunc;
+MSRP.PortOptimizerFunc = @libopt.MaxSharpeRatio;
+MSRP.OptimizationInterval = optimizationInterval;
+MSRP.RebalancingInterval = rebalancingInterval;
+MSRP.Returns = rets;
+MSRP.Securities = rets.Properties.VariableNames;
+MSRP.StartIndex = startIndex;
+
+% Equal Risk Contribution
+ERC = BacktestConfig('Equal Risk Contribution');
+ERC.ExpectedRetsFunc = @librets.expMovingAverage;
+ERC.ExpectedRetsDataFunc = movingWndDataFunc;
+ERC.CovFunc = @libcov.sampleCovShrinkageOAS;
+ERC.CovDataFunc = movingWndDataFunc;
+ERC.PortOptimizerFunc = @libopt.EqualRiskContribution;
+ERC.OptimizationInterval = optimizationInterval;
+ERC.RebalancingInterval = rebalancingInterval;
+ERC.Returns = rets;
+ERC.Securities = rets.Properties.VariableNames;
+ERC.StartIndex = startIndex;
 
 % list of backtest configs
-bCfg = {cfg1, cfg2, cfg3, cfg4};
+% bCfg = {EQW, MinVar, ERC, MSR, MSRP};
+bCfg = {EQW, MinVar, ERC, MSR};
+% bCfg = {EQW, MinVar};
+% bCfg = {ERC};
 
-% list of backtest results
+
+
+% run backtests in parallel
 bRes = {};
+parfor i=1:length(bCfg)
+%for i=1:length(bCfg)
+    bRes{i} = libbacktest().execute(bCfg{i});
+end
 
-% all backtest portfolio returns in timetable
+
+% store backtest portfolio returns in one timetable
 bRets = timetable(rets.Date);
 bRets.Properties.DimensionNames = {'Date', 'Returns'};
 
 for i=1:length(bCfg)
-    bRes{i} = libbacktest.execute(bCfg{i});
-    bRets = addvars(bRets, bRes{i}.PortfolioReturns{:, 1}, 'NewVariableNames', bCfg{i}.Name);
+    bRets = addvars(bRets, bRes{i}.PortfolioRets{:, 1}, 'NewVariableNames', bCfg{i}.Name);
 end
 
-% cumulative portfolio returns
-bCumRets = libdata.cumulativeReturns(bRets);
 
 % Sharpe ratios
 SR = libdata.sharpeRatio(bRets, frequency);
-disp("\nPortfolio Sharpe Ratios");
+disp(' ');
+disp("    Portfolio Sharpe Ratios");
+disp("    -------------------------------------");
 disp([bRets.Properties.VariableNames' num2cell(SR)]);
+disp(' ');
 
 
 
 
+% ----------------------- PLOTS ---------------------------
 
-libvis = visualize();
+libvis = libvisualize();
+libcolors = libcolors();
 
-
-
-figure(1)
+% strategy weights over time
+libvis.newFigure('Strategy Allocations', true);
+tiledlayout(length(bRes), 1, 'Padding','compact');
 for i=1:length(bRes)
-    wgts = bRes{i}.PortfolioWeights;
+    plotTitle = strcat("Strategy Allocation - ", bRes{i}.Config.Name);
+    wgts = bRes{i}.StrategyWgts(bRes{i}.Config.StartIndex:end, :);
     
-    subplot(length(bRes), 1, i);
-    area(wgts{:, :})
-    legend(bRes{i}.Config.Securities, 'Location', 'NorthEastOutside')
-    title(strcat("Allocation over time: ", bRes{i}.Config.Name))
-    ylabel('Allocation')
-    axis([bRes{i}.Config.StartIndex size(wgts, 1) 0 1])
-    % set(gca, 'XTick', ticks)
-    % set(gca, 'XTickLabel', datestr(xTickNames,12))
+    labels = [];
+    if i == 1
+        labels = wgts.Properties.VariableNames;
+    end
+    
+    nexttile;
+    libvis.plotWeights(plotTitle, wgts, labels, 'log-returns [%]', @libcolors.gradientColors);
 end
 
 
 
-        
-        
+
+% portfolio weights over time
+libvis.newFigure('Portfolio Allocations', true);
+tiledlayout(length(bRes), 1, 'Padding','compact');
+for i=1:length(bRes)
+    plotTitle = strcat("Portfolio Allocation - ", bRes{i}.Config.Name);
+    wgts = bRes{i}.PortfolioWgts(bRes{i}.Config.StartIndex:end, :);
+    
+    labels = [];
+    if i == 1
+        labels = wgts.Properties.VariableNames;
+    end
+    
+    nexttile;
+    libvis.plotWeights(plotTitle, wgts, labels, 'log-returns [%]', @libcolors.gradientColors);
+end
+
+
+
+
+
+
+
 
 % plot strategy returns
-figure(2)
-subplot(2, 1, 1); libvis.plotReturns('Strategy cumulative returns', bCumRets)
+bCumRets = libdata.cumulativeReturns(bRets);
+
+titleStr = 'Strategy Cumulative Returns';
+libvis.newFigure(titleStr, false);
+tiledlayout(1, 1, 'Padding','compact');
+labels = strcat(num2str(SR, "SR=%.2f - "), " ", bCumRets.Properties.VariableNames');
+nexttile; libvis.plotReturns(titleStr, bCumRets, labels, 'log-returns [%]', @libcolors.distinctColors)
 
 
 
-% plot returns of asset classes
-% figure(2)
-subplot(2, 1, 2); libvis.plotReturns('Asset class returns', cumRets)
-% subplot(3, 2, 1); libvis.plotReturns('Cash', cumRets(:, 1))
-% subplot(3, 2, 2); libvis.plotReturns('Bonds', cumRets(:, 2:6))
-% subplot(3, 2, 3); libvis.plotReturns('Equities', cumRets(:, 7:10))
-% subplot(3, 2, 4); libvis.plotReturns('Alternative', cumRets(:, 11:12))
-% subplot(3, 2, 5); libvis.plotReturns('Commodities', cumRets(:, 13))
+% % plot returns of asset classes in different plots
+% titleStr = 'Asset class returns';
+% libvis.newFigure(titleStr, true);
+% t = tiledlayout(3, 2, 'Padding','compact');
+% ylabel(t, 'log-returns [%]')
+% cumRets = libdata.cumulativeReturns(rets);
+% nexttile; libvis.plotReturns('Cash', cumRets(:, 1), [], '', @libcolors.distinctColors)
+% nexttile; libvis.plotReturns('Bonds', cumRets(:, 2:6), [], '', @libcolors.distinctColors)
+% nexttile; libvis.plotReturns('Equities', cumRets(:, 7:10), [], '', @libcolors.distinctColors)
+% nexttile; libvis.plotReturns('Alternative', cumRets(:, 11:13), [], '', @libcolors.distinctColors)
+% nexttile; libvis.plotReturns('Liability', cumRets(:, 15:18), [], '', @libcolors.distinctColors)
+% nexttile; libvis.plotReturns('Commodities', cumRets(:, 14), [], '', @libcolors.distinctColors)
+% 
+% 
+% % plot returns of asset classes in one plot
+% titleStr = 'Asset class returns';
+% libvis.newFigure(titleStr, true);
+% libvis.plotReturns(titleStr, cumRets, [], 'log-returns [%]', @libcolors.gradientColors)
 
 
 
 
+
+% % visualize a matrix and it's values
+% A = nancov(rets{:,:}) * 1000000;
+% n = size(A, 1);
+% m = size(A, 2);
+% cmap = autumn(ceil(max(max(A))));
+% 
+% figure
+% image(A)
+% colormap(cmap)
+% set(gca,'XTick',[],'YTick',[],'YDir','normal')
+% [x,y] = meshgrid(1:n,1:m);
+% text(x(:),y(:),num2str(A(:)),'HorizontalAlignment','center')
 
 
 

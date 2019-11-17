@@ -17,7 +17,7 @@ classdef BacktestConfig
         CovFunc
         CovDataFunc
         PortOptimizerFunc
-        EstimationInterval {mustBeNumeric}
+        OptimizationInterval {mustBeNumeric}
         RebalancingInterval {mustBeNumeric}
         Returns
         Securities

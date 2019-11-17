@@ -1,4 +1,9 @@
-function funcs = expectedReturnsEstimation()
+% This library deals with the estimation of expected returns.
+% Two methods are provided currently:
+%  1. Historical sample mean estimate
+%  2. Historical exponential moving average (EMA) estimate
+
+function funcs = libreturns()
     funcs.arithmeticMean = @arithmeticMean;
     funcs.expMovingAverage = @expMovingAverage;
 end

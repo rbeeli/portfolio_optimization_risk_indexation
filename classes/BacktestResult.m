@@ -4,8 +4,9 @@ classdef BacktestResult
     
     properties
         Config
-        PortfolioWeights
-        PortfolioReturns
+        StrategyWgts
+        PortfolioWgts
+        PortfolioRets
     end
     
     methods

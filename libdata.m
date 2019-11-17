@@ -1,4 +1,4 @@
-function funcs = data()
+function funcs = libdata()
     funcs.readLectureDataset = @readLectureDataset;
     funcs.cumulativeReturns = @cumulativeReturns;
     funcs.summaryStats = @summaryStats;
@@ -33,6 +33,7 @@ end
 function [returns, frequency] = readLectureDataset()
     % read Excel
     returns = readtable('data/Seminar APT 2019 - Returns V2.xlsx', 'ReadVariableNames',true, 'PreserveVariableNames',true);
+    returns.Properties.VariableNames(1) = {'Date'};
 %     returns = removevars(returns, {
 %         'ILS (desmoothed)',...
 %         'Liability Proxy 1-3 years',...
@@ -40,7 +41,6 @@ function [returns, frequency] = readLectureDataset()
 %         'Liability Proxy 5-7 years',...
 %         'Liability Proxy 10+ years'
 %     });
-    returns.Properties.VariableNames(1) = {'Date'};
 
     % parse date
     returns.Date = datetime(returns.Date, 'InputFormat', 'dd.MM.yyyy');
@@ -64,8 +64,8 @@ function cumReturns = cumulativeReturns(simpleRets)
         returns = simpleRets{:, col};
         
         % ignore NaN rows for returns calculation
-        data_indices = find(~isnan(returns));
-        cumReturns{data_indices, col} = cumprod(1 + returns(data_indices));
+        dataIndices = ~isnan(returns);
+        cumReturns{dataIndices, col} = cumprod(1 + returns(dataIndices));
     end
 end
 
@@ -82,11 +82,11 @@ function stats = summaryStats(simpleRets, frequency)
     statKurt = NaN(nAssets, 1);
     
     for col = 1:nAssets
-        dataIndices = find(~isnan(cumRets{:, col}));
+        dataIndices = ~isnan(cumRets{:, col});
         assetSimpleRets = simpleRets{dataIndices, col};
         assetCumRets = cumRets{dataIndices, col};
         
-        if size(dataIndices, 1) > 0
+        if size(assetSimpleRets, 1) > 0
             statReturns(col) = 100 * (assetCumRets(end) ^ (frequency/periods(col)) - 1);
             statVol(col) = 100 * sqrt(frequency) * std(assetSimpleRets);
             statSkew(col) = skewness(assetSimpleRets);
@@ -106,10 +106,10 @@ function SR = sharpeRatio(simpleRets, frequency)
     SR = NaN(nAssets, 1);
     
     for col = 1:nAssets
-        dataIndices = find(~isnan(simpleRets{:, col}));
+        dataIndices = ~isnan(simpleRets{:, col});
         assetSimpleRets = simpleRets{dataIndices, col};
         
-        if size(dataIndices, 1) > 0
+        if size(assetSimpleRets, 1) > 0
             SR(col) = sqrt(frequency) * mean(assetSimpleRets) / std(assetSimpleRets);
         end
     end

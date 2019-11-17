@@ -1,4 +1,9 @@
-function funcs = covarianceEstimation()
+% This library deals with the estimation of covariance matrices.
+% Two methods are provided currently:
+%  1. Historical sample covariance estimate
+%  2. Historical OAS shrinkage estimate
+
+function funcs = libcovariance()
     funcs.sampleCov = @sampleCov;
     funcs.sampleCovShrinkageOAS = @sampleCovShrinkageOAS;
 end
@@ -12,7 +17,5 @@ end
 
 function covMatrix = sampleCovShrinkageOAS(returns)
     % shrinkage (OAS)
-    libshrinkage = shrinkage();
-    sigma = cov(returns);
-    covMatrix = libshrinkage.oas(sigma);
+    covMatrix = libshrinkage().oas(returns);
 end

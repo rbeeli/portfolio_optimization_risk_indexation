@@ -1,20 +1,20 @@
-% Taken from: https://ch.mathworks.com/matlabcentral/fileexchange/57674-shrinkage-algorithms-for-covariance-matrix-estimation
-
-function funcs = shrinkage()
+function funcs = libshrinkage()
     funcs.oas = @shrinkageOAS;
     funcs.rblw = @shrinkageRBLW;
 end
 
 
-function covMatrix = shrinkageOAS(covMat)
-    [covMatrix, ~] = computeShrinkage(covMat, 'oas');
+function covMat = shrinkageOAS(data)
+    [covMat, ~] = computeShrinkage(data, 'oas');
 end
 
 
-function covMatrix = shrinkageRBLW(covMat)
-    [covMatrix, ~] = computeShrinkage(covMat, 'rblw');
+function covMat = shrinkageRBLW(data)
+    [covMat, ~] = computeShrinkage(data, 'rblw');
 end
 
+% -------------------------------------------------------------------------------------------------
+% https://ch.mathworks.com/matlabcentral/fileexchange/57674-shrinkage-algorithms-for-covariance-matrix-estimation
 
 function [sigma, rho] = computeShrinkage(X, est)
     % this program is distributed under BSD 2-Clause license
