@@ -19,9 +19,9 @@ librets = libreturns();
 libcov = libcovariance();
 libopt = liboptimizer();
 
-estimationWindow = 5 * frequency;
-optimizationInterval = 1 * frequency;
-rebalancingInterval = 1 * frequency;
+estimationWindow = 2 * frequency;
+optimizationInterval = 0.5 * frequency;
+rebalancingInterval = 0.5 * frequency;
 startIndex = estimationWindow + 1;
 
 movingWndDataFunc = @(rets, idx) libdata.extractWindow(rets, idx, estimationWindow);
