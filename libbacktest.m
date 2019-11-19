@@ -5,7 +5,8 @@ end
 
 function result = execute(backtestCfg)
     disp(strcat("Backtesting `", backtestCfg.Name, "` ..."));
-
+    timer = tic;
+    
     nReturns = size(backtestCfg.Returns, 1);
     
     % store backtest result in object
@@ -50,7 +51,7 @@ function result = execute(backtestCfg)
             
             % optimize portfolio/calculate weights
             opts = OptParams(expRets, covMat);
-            opts.UpperBounds = opts.UpperBounds * 0.3;
+%             opts.UpperBounds = opts.UpperBounds * 0.3;
             
             result.PortfolioWgts{idx, securities} = backtestCfg.PortOptimizerFunc(opts)';
             result.StrategyWgts{idx, securities} = backtestCfg.PortOptimizerFunc(opts)';
@@ -79,7 +80,8 @@ function result = execute(backtestCfg)
 %         assert(abs(nansum(result.StrategyWgts{idx, :}) - 1) < 0.0001, strcat("Strategy weights of strategy `", backtestCfg.Name, "` must sum to 1."));
     end
     
-    disp(strcat("Backtesting `", backtestCfg.Name, "` finished."));
+    elapsed = toc(timer);
+    disp(strcat("Backtesting `", backtestCfg.Name, "` finished in ", num2str(elapsed), " s"));
 end
 
 

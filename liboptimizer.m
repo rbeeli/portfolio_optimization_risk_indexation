@@ -13,23 +13,23 @@ end
 
 
 function weights = MinVariance(params)
-    V0 = zeros(1, params.N);
-    V1 = ones(1, params.N);
+    f = zeros(1, params.N);
+    Aeq = ones(1, params.N);
+    beq = 1;
+    lb = params.LowerBounds;
+    ub = params.UpperBounds;
     
     % define inequality constraints
-    A1 = zeros(1, params.N); 
-    A2 = zeros(1, params.N);
-    A = [A1; A2];
+    A = [zeros(1, params.N); zeros(1, params.N)];
     b = [1; 1];
     
     % scale covariance matrix by large factor for
     % increased optimization accuracy
-    Sigma = params.CovMat * 10^10;
+    H = params.CovMat * 10^10;
     
     % find minimum variance weigths
-    options = optimset('Algorithm','interior-point-convex', ...
-                       'Display','off');
-    weights = quadprog(Sigma, V0, A, b, V1, 1, params.LowerBounds, params.UpperBounds, [], options);
+    opts = optimset('Algorithm','interior-point-convex', 'Display','off');
+    weights = quadprog(H, f, A, b, Aeq, beq, lb, ub, [], opts);
 end
 
 
@@ -100,18 +100,19 @@ function weights = EqualRiskContribution(params)
     nAssets = size(params.CovMat, 1);
     
     % initial weights (equal weighted)
-    w0 = 1/nAssets * ones(params.N, 1);
-    A = ones(1, params.N);
-    b = 1;
+    x0 = 1/nAssets * ones(params.N, 1);
+    Aeq = ones(1, params.N);
+    beq = 1;
+    lb = params.LowerBounds;
+    ub = params.UpperBounds;
     
-    % scale covariance matrix by large factor for
-    % increased optimization accuracy
+    % scale covariance matrix by large factor for increased optimization accuracy
     Sigma = params.CovMat * 10^14;
     
     % Sequential Quadratic Programming (SQP) algorithm
-    f = @(W) var(W.*(Sigma*W));
+    fun = @(W) var(W.*(Sigma*W));
     opts = optimset('Display', 'off');
-    weights = fmincon(f, w0, [], [], A, b, params.LowerBounds, params.UpperBounds, [], opts);
+    weights = fmincon(fun, x0, [], [], Aeq, beq, lb, ub, [], opts);
 end
 
 
