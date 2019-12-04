@@ -22,6 +22,7 @@ classdef BacktestConfig
         Returns
         Securities
         StartIndex {mustBeNumeric}
+        ConstraintsFunc
     end
     
     methods

@@ -1,5 +1,6 @@
 function funcs = libdata()
     funcs.readLectureDataset = @readLectureDataset;
+    funcs.readSAA = @readSAA;
     funcs.cumulativeReturns = @cumulativeReturns;
     funcs.summaryStats = @summaryStats;
     funcs.readSP500Dataset = @readSP500Dataset;
@@ -7,6 +8,18 @@ function funcs = libdata()
     funcs.extractWindow = @extractWindow;
 end
 
+
+function SAA = readSAA()
+    T = readtable('data/SAA.xlsx');
+    
+    T(size(T, 1), :) = []; % remove summary row
+    T.Asset_Class = categorical(T.Asset_Class);
+    T.Asset_Type = categorical(T.Asset_Type);
+    
+    assert(sum(T.Target) == 1.0, "Target weights of SAA need to sum up to 100%.");
+    
+    SAA = T;
+end
 
 function [indexRets, stockRets, frequency] = readSP500Dataset()
     % read Excel
@@ -34,13 +47,12 @@ function [returns, frequency] = readLectureDataset()
     % read Excel
     returns = readtable('data/Seminar APT 2019 - Returns V2.xlsx', 'ReadVariableNames',true, 'PreserveVariableNames',true);
     returns.Properties.VariableNames(1) = {'Date'};
-%     returns = removevars(returns, {
-%         'ILS (desmoothed)',...
-%         'Liability Proxy 1-3 years',...
-%         'Liability Proxy 3-5 years',...
-%         'Liability Proxy 5-7 years',...
-%         'Liability Proxy 10+ years'
-%     });
+    returns = removevars(returns, {
+        'Liability Proxy 1-3 years',...
+        'Liability Proxy 3-5 years',...
+        'Liability Proxy 5-7 years',...
+        'Liability Proxy 10+ years'
+    });
 
     % parse date
     returns.Date = datetime(returns.Date, 'InputFormat', 'dd.MM.yyyy');
@@ -127,5 +139,5 @@ function windowRets = extractWindow(returns, position, lookbackWindow)
     %    idxTo=9
     idxFrom = max(1, position - lookbackWindow);
     idxTo = min(size(returns, 1), position - 1);
-    windowRets = returns{idxFrom:idxTo, :};
+    windowRets = returns(idxFrom:idxTo, :);
 end

@@ -1,16 +1,5 @@
 function funcs = libshrinkage()
-    funcs.oas = @shrinkageOAS;
-    funcs.rblw = @shrinkageRBLW;
-end
-
-
-function covMat = shrinkageOAS(data)
-    [covMat, ~] = computeShrinkage(data, 'oas');
-end
-
-
-function covMat = shrinkageRBLW(data)
-    [covMat, ~] = computeShrinkage(data, 'rblw');
+    funcs.oas = @(data) computeShrinkage(data, 'oas');
 end
 
 

@@ -26,8 +26,11 @@ function result = execute(backtestCfg)
     result.PortfolioRets.Properties.VariableNames = {'Return'};
     
     % do backtest
+    nSteps = nReturns - backtestCfg.StartIndex + 1;
     for idx=backtestCfg.StartIndex:nReturns
         stepIndex = idx - backtestCfg.StartIndex;
+        
+        fprintf("%s - Progress: %.2f%%\n", backtestCfg.Name, stepIndex / nSteps * 100);
         
         if mod(stepIndex, backtestCfg.OptimizationInterval) == 0
             % ---
@@ -38,20 +41,28 @@ function result = execute(backtestCfg)
             expectedRetsData = backtestCfg.ExpectedRetsDataFunc(backtestCfg.Returns, idx);
             covData = backtestCfg.ExpectedRetsDataFunc(backtestCfg.Returns, idx);
 
-            % only consider assets which have no NaN data
-            securities = (sum(isnan(expectedRetsData), 1) == 0) & (sum(isnan(covData), 1) == 0);
-            expectedRetsData = expectedRetsData(:, securities);
-            covData = covData(:, securities);
+            % only consider assets which have no NaN data for both,
+            % expected returns data and covariance data.
+            securities = (sum(isnan(expectedRetsData{:, :}), 1) == 0) & (sum(isnan(covData{:, :}), 1) == 0);
+            securitiesNames = expectedRetsData.Properties.VariableNames(securities);
+            
+            expectedRetsData = expectedRetsData{:, securities};
+            covData = covData{:, securities};
             
             % estimate expected returns
-            expRets = backtestCfg.ExpectedRetsFunc(expectedRetsData);
+            expRets = [];
+            if isa(backtestCfg.ExpectedRetsFunc, 'function_handle')
+                expRets = backtestCfg.ExpectedRetsFunc(expectedRetsData);
+            end
             
             % estimate covariance
-            covMat = backtestCfg.CovFunc(covData);
+            covMat = [];
+            if isa(backtestCfg.CovFunc, 'function_handle')
+                covMat = backtestCfg.CovFunc(covData);
+            end
             
             % optimize portfolio/calculate weights
-            opts = OptParams(expRets, covMat);
-%             opts.UpperBounds = opts.UpperBounds * 0.3;
+            opts = OptParams(securitiesNames, expRets, covMat, backtestCfg.ConstraintsFunc);
             
             result.PortfolioWgts{idx, securities} = backtestCfg.PortOptimizerFunc(opts)';
             result.StrategyWgts{idx, securities} = backtestCfg.PortOptimizerFunc(opts)';

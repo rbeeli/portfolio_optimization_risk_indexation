@@ -8,8 +8,13 @@ libdata = libdata();
 % lecture dataset
 [lecRets, frequency] = libdata.readLectureDataset();
 rets = lecRets;
+nAssets = size(rets, 2);
+
+% Strategic Asset Allocation
+SAA = libdata.readSAA();
 
 % data summary statistics
+cumRets = libdata.cumulativeReturns(rets);
 libdata.summaryStats(rets, frequency)
 
 
@@ -18,21 +23,19 @@ libdata.summaryStats(rets, frequency)
 librets = libreturns();
 libcov = libcovariance();
 libopt = liboptimizer();
+libconst = libconstraints();
 
-estimationWindow = 2 * frequency;
-optimizationInterval = 0.25 * frequency;
-rebalancingInterval = 0.25 * frequency;
+estimationWindow = 3 * frequency;
+optimizationInterval = 0.5 * frequency;
+rebalancingInterval = 0.5 * frequency;
 startIndex = estimationWindow + 1;
 
 movingWndDataFunc = @(rets, idx) libdata.extractWindow(rets, idx, estimationWindow);
 movingWndFutureDataFunc = @(rets, idx) libdata.extractWindow(rets, idx + estimationWindow, estimationWindow);
 
 
-% 1/N
 EQW = BacktestConfig('1/N');
-EQW.ExpectedRetsFunc = @librets.expMovingAverage;
 EQW.ExpectedRetsDataFunc = movingWndDataFunc;
-EQW.CovFunc = @libcov.sampleCovShrinkageOAS;
 EQW.CovDataFunc = movingWndDataFunc;
 EQW.PortOptimizerFunc = @libopt.EqualWeights;
 EQW.OptimizationInterval = optimizationInterval;
@@ -41,11 +44,10 @@ EQW.Returns = rets;
 EQW.Securities = rets.Properties.VariableNames;
 EQW.StartIndex = startIndex;
 
-% Minimum Variance
-MinVar = BacktestConfig('Minimum Variance');
+MinVar = BacktestConfig('Minimum Variance (unconstrained)');
 MinVar.ExpectedRetsFunc = @librets.expMovingAverage;
 MinVar.ExpectedRetsDataFunc = movingWndDataFunc;
-MinVar.CovFunc = @libcov.sampleCovShrinkageOAS;
+MinVar.CovFunc = @libcov.sampleCov;
 MinVar.CovDataFunc = movingWndDataFunc;
 MinVar.PortOptimizerFunc = @libopt.MinVariance;
 MinVar.OptimizationInterval = optimizationInterval;
@@ -54,11 +56,35 @@ MinVar.Returns = rets;
 MinVar.Securities = rets.Properties.VariableNames;
 MinVar.StartIndex = startIndex;
 
-% Maximum Sharpe Ratio
+MinVar2 = BacktestConfig('Minimum Variance (shrinkage, unconstrained)');
+MinVar2.ExpectedRetsFunc = @librets.expMovingAverage;
+MinVar2.ExpectedRetsDataFunc = movingWndDataFunc;
+MinVar2.CovFunc = @libcov.sampleCovShrinkageOAS;
+MinVar2.CovDataFunc = movingWndDataFunc;
+MinVar2.PortOptimizerFunc = @libopt.MinVariance;
+MinVar2.OptimizationInterval = optimizationInterval;
+MinVar2.RebalancingInterval = rebalancingInterval;
+MinVar2.Returns = rets;
+MinVar2.Securities = rets.Properties.VariableNames;
+MinVar2.StartIndex = startIndex;
+
+MinVar3 = BacktestConfig('Minimum Variance (shrinkage, SAA)');
+MinVar3.ExpectedRetsFunc = @librets.expMovingAverage;
+MinVar3.ExpectedRetsDataFunc = movingWndDataFunc;
+MinVar3.CovFunc = @libcov.sampleCovShrinkageOAS;
+MinVar3.CovDataFunc = movingWndDataFunc;
+MinVar3.PortOptimizerFunc = @libopt.MinVarianceConstrained;
+MinVar3.ConstraintsFunc = @(optParams) libconst.imposeSAAPositionLevel(optParams, SAA);
+MinVar3.OptimizationInterval = optimizationInterval;
+MinVar3.RebalancingInterval = rebalancingInterval;
+MinVar3.Returns = rets;
+MinVar3.Securities = rets.Properties.VariableNames;
+MinVar3.StartIndex = startIndex;
+
 MSR = BacktestConfig('Maximum Sharpe Ratio');
 MSR.ExpectedRetsFunc = @librets.expMovingAverage;
 MSR.ExpectedRetsDataFunc = movingWndDataFunc;
-MSR.CovFunc = @libcov.sampleCovShrinkageOAS;
+MSR.CovFunc = @libcov.sampleCov;
 MSR.CovDataFunc = movingWndDataFunc;
 MSR.PortOptimizerFunc = @libopt.MaxSharpeRatio;
 MSR.OptimizationInterval = optimizationInterval;
@@ -67,11 +93,22 @@ MSR.Returns = rets;
 MSR.Securities = rets.Properties.VariableNames;
 MSR.StartIndex = startIndex;
 
-% Maximum SR (perfect information)
+MSR2 = BacktestConfig('Maximum Sharpe Ratio (shrinkage)');
+MSR2.ExpectedRetsFunc = @librets.expMovingAverage;
+MSR2.ExpectedRetsDataFunc = movingWndDataFunc;
+MSR2.CovFunc = @libcov.sampleCovShrinkageOAS;
+MSR2.CovDataFunc = movingWndDataFunc;
+MSR2.PortOptimizerFunc = @libopt.MaxSharpeRatio;
+MSR2.OptimizationInterval = optimizationInterval;
+MSR2.RebalancingInterval = rebalancingInterval;
+MSR2.Returns = rets;
+MSR2.Securities = rets.Properties.VariableNames;
+MSR2.StartIndex = startIndex;
+
 MSRP = BacktestConfig('Maximum Sharpe Ratio (perfect information)');
 MSRP.ExpectedRetsFunc = @librets.arithmeticMean;
 MSRP.ExpectedRetsDataFunc = movingWndFutureDataFunc;
-MSRP.CovFunc = @libcov.sampleCovShrinkageOAS;
+MSRP.CovFunc = @libcov.sampleCov;
 MSRP.CovDataFunc = movingWndFutureDataFunc;
 MSRP.PortOptimizerFunc = @libopt.MaxSharpeRatio;
 MSRP.OptimizationInterval = optimizationInterval;
@@ -80,11 +117,22 @@ MSRP.Returns = rets;
 MSRP.Securities = rets.Properties.VariableNames;
 MSRP.StartIndex = startIndex;
 
-% Equal Risk Contribution
+MSRP2 = BacktestConfig('Maximum Sharpe Ratio (perfect information, shrinkage)');
+MSRP2.ExpectedRetsFunc = @librets.arithmeticMean;
+MSRP2.ExpectedRetsDataFunc = movingWndFutureDataFunc;
+MSRP2.CovFunc = @libcov.sampleCovShrinkageOAS;
+MSRP2.CovDataFunc = movingWndFutureDataFunc;
+MSRP2.PortOptimizerFunc = @libopt.MaxSharpeRatio;
+MSRP2.OptimizationInterval = optimizationInterval;
+MSRP2.RebalancingInterval = rebalancingInterval;
+MSRP2.Returns = rets;
+MSRP2.Securities = rets.Properties.VariableNames;
+MSRP2.StartIndex = startIndex;
+
 ERC = BacktestConfig('Equal Risk Contribution');
 ERC.ExpectedRetsFunc = @librets.expMovingAverage;
 ERC.ExpectedRetsDataFunc = movingWndDataFunc;
-ERC.CovFunc = @libcov.sampleCovShrinkageOAS;
+ERC.CovFunc = @libcov.sampleCov;
 ERC.CovDataFunc = movingWndDataFunc;
 ERC.PortOptimizerFunc = @libopt.EqualRiskContribution;
 ERC.OptimizationInterval = optimizationInterval;
@@ -93,18 +141,29 @@ ERC.Returns = rets;
 ERC.Securities = rets.Properties.VariableNames;
 ERC.StartIndex = startIndex;
 
+ERC2 = BacktestConfig('Equal Risk Contribution (shrinkage)');
+ERC2.ExpectedRetsFunc = @librets.expMovingAverage;
+ERC2.ExpectedRetsDataFunc = movingWndDataFunc;
+ERC2.CovFunc = @libcov.sampleCovShrinkageOAS;
+ERC2.CovDataFunc = movingWndDataFunc;
+ERC2.PortOptimizerFunc = @libopt.EqualRiskContribution;
+ERC2.OptimizationInterval = optimizationInterval;
+ERC2.RebalancingInterval = rebalancingInterval;
+ERC2.Returns = rets;
+ERC2.Securities = rets.Properties.VariableNames;
+ERC2.StartIndex = startIndex;
+
 % list of backtest configs
-% bCfg = {EQW, MinVar, ERC, MSR, MSRP};
-bCfg = {EQW, MinVar, ERC, MSR};
-% bCfg = {EQW, MinVar};
-% bCfg = {ERC};
+%bCfg = {MinVar, MinVar2, MSR, MSR2, MSRP, MSRP2};
+bCfg = {MinVar3, MinVar2, EQW};
+%bCfg = {MinVar2};
 
 
 
 % run backtests in parallel
 bRes = {};
-parfor i=1:length(bCfg)
-%for i=1:length(bCfg)
+%parfor i=1:length(bCfg)
+for i=1:length(bCfg)
     bRes{i} = libbacktest().execute(bCfg{i});
 end
 
@@ -192,15 +251,14 @@ nexttile; libvis.plotReturns(titleStr, bCumRets, labels, 'log-returns [%]', @lib
 % libvis.newFigure(titleStr, true);
 % t = tiledlayout(3, 2, 'Padding','compact');
 % ylabel(t, 'log-returns [%]')
-% cumRets = libdata.cumulativeReturns(rets);
 % nexttile; libvis.plotReturns('Cash', cumRets(:, 1), [], '', @libcolors.distinctColors)
 % nexttile; libvis.plotReturns('Bonds', cumRets(:, 2:6), [], '', @libcolors.distinctColors)
 % nexttile; libvis.plotReturns('Equities', cumRets(:, 7:10), [], '', @libcolors.distinctColors)
 % nexttile; libvis.plotReturns('Alternative', cumRets(:, 11:13), [], '', @libcolors.distinctColors)
 % nexttile; libvis.plotReturns('Liability', cumRets(:, 15:18), [], '', @libcolors.distinctColors)
 % nexttile; libvis.plotReturns('Commodities', cumRets(:, 14), [], '', @libcolors.distinctColors)
-% 
-% 
+
+
 % % plot returns of asset classes in one plot
 % titleStr = 'Asset class returns';
 % libvis.newFigure(titleStr, true);
