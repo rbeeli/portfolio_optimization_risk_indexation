@@ -5,6 +5,7 @@ function funcs = libdata()
     funcs.readSP500Dataset = @readSP500Dataset;
     funcs.sharpeRatio = @sharpeRatio;
     funcs.extractWindow = @extractWindow;
+    funcs.readNASDAQ100Dataset = @readNASDAQ100Dataset;
 end
 
 
@@ -30,9 +31,27 @@ function [indexRets, stockRets, frequency] = readSP500Dataset()
 end
 
 
+function [stockRets, frequency] = readNASDAQ100Dataset()
+    % read Excel
+    stockRets = readtable('data/NASDAQ-100/NASDAQ-100_stocks_monthly_wide.csv', 'ReadVariableNames',true, 'PreserveVariableNames',true);
+    
+    % rename columns
+    stockRets.Properties.VariableNames(1) = {'Date'};
+
+    % parse date
+    stockRets.Date = datetime(stockRets.Date, 'InputFormat', 'yyyy-MM-dd');
+    
+    % convert to timetable
+    stockRets = table2timetable(stockRets);
+    
+    % monthly data
+    frequency = 12;
+end
+
+
 function [returns, frequency] = readLectureDataset()
     % read Excel
-    returns = readtable('data/Seminar APT 2019 - Returns V2.xlsx', 'ReadVariableNames',true, 'PreserveVariableNames',true);
+    returns = readtable('data/lecture_dataset/Seminar APT 2019 - Returns V2.xlsx', 'ReadVariableNames',true, 'PreserveVariableNames',true);
     returns.Properties.VariableNames(1) = {'Date'};
 %     returns = removevars(returns, {
 %         'ILS (desmoothed)',...
@@ -77,6 +96,8 @@ function stats = summaryStats(simpleRets, frequency)
     cumRets = cumulativeReturns(simpleRets);
     
     statReturns = NaN(nAssets, 1);
+    statWorst = NaN(nAssets, 1);
+    statBest = NaN(nAssets, 1);
     statVol = NaN(nAssets, 1);
     statSkew = NaN(nAssets, 1);
     statKurt = NaN(nAssets, 1);
@@ -91,12 +112,14 @@ function stats = summaryStats(simpleRets, frequency)
             statVol(col) = 100 * sqrt(frequency) * std(assetSimpleRets);
             statSkew(col) = skewness(assetSimpleRets);
             statKurt(col) = kurtosis(assetSimpleRets);
+            statWorst(col) = min(assetSimpleRets);
+            statBest(col) = max(assetSimpleRets);
         end
     end
     
-    colNames = [{'Asset Class'} {'Years'} {'Return p.a.'} {'Volatility p.a.'} {'Skewness'} {'Kurtosis'}];
+    colNames = [{'Asset Class'} {'Years'} {'Return p.a.'} {'Worst'}  {'Best'} {'Volatility p.a.'} {'Skewness'} {'Kurtosis'}];
     rowNames = simpleRets.Properties.VariableNames';
-    tableData = string([round(years) round([statReturns statVol statSkew statKurt]*100)/100]);
+    tableData = string([round(years) round([statReturns statWorst statBest statVol statSkew statKurt]*100)/100]);
     stats = [colNames; rowNames tableData];
 end
 

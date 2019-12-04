@@ -25,11 +25,13 @@ function plotReturns(plotTitle, returns, labels, yAxisLabel, colorFunc)
     end
     
     % legend
-    if isempty(labels)
-        labels = returns.Properties.VariableNames;
-    end
+    if size(returns, 2) <= 20
+        if isempty(labels)
+            labels = returns.Properties.VariableNames;
+        end
 
-    legend(labels, 'Interpreter','none', 'Location','NorthWest');
+        legend(labels, 'Interpreter','none', 'Location','NorthWest');
+    end
     
 %     % x-axis tick labels (year)
 %     ticks = 1:(floor(size(returns, 1) / 12)):size(returns, 1);
@@ -52,8 +54,10 @@ function plotWeights(plotTitle, wgts, labels, yAxisLabel, colorFunc)
     axis([0 size(wgts, 1) 0 100])
     
     % legend
-    if ~isempty(labels)
-        legend(labels, 'Location', 'NorthEastOutside')
+    if size(wgts, 2) <= 20
+        if ~isempty(labels)
+            legend(labels, 'Location', 'NorthEastOutside')
+        end
     end
     
     % title

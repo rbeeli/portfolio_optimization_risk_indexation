@@ -13,7 +13,7 @@ to <- '2019-08-31'
 
 
 # connect to WRDS database
-wrds <- dbConnect(Postgres(), host='wrds-pgdata.wharton.upenn.edu', port=9737, dbname='wrds', sslmode='require', user='rbeeli', password=read_file('WRDS_pwd.txt'))
+wrds <- dbConnect(Postgres(), host='wrds-pgdata.wharton.upenn.edu', port=9737, dbname='wrds', sslmode='require', user='rbeeli', password=read_file('../WRDS_pwd.txt'))
 
 
 # query S&P 500 single stock returns including delisting information, market cap and volume
