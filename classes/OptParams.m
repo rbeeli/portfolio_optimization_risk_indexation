@@ -1,6 +1,6 @@
 classdef OptParams
-    % This object holds information as input parameters for the optimizer
-    % methods.
+    % This object holds information as input parameters
+    % for the optimizer methods.
     
     properties
         % Number of assets
@@ -12,22 +12,21 @@ classdef OptParams
         % Covariance matrix
         CovMat
         
-        % Asset weights lower bounds
-        LowerBounds
+        % Function returning object "Constraints"
+        ConstraintsFunc
         
-        % Asset weights upper bounds
-        UpperBounds
+        % List of securities names used for this
+        % optimization pass (1 x N cell array).
+        Securities
     end
     
     methods
-        function opts = OptParams(expRets, covMat)
+        function opts = OptParams(securities, expRets, covMat, constraintsFunc)
+            opts.N = size(securities, 2);
+            opts.Securities = securities;
             opts.ExpRets = expRets;
             opts.CovMat = covMat;
-            opts.N = size(covMat, 1);
-            
-            % set default weight bounds to [0, 1]
-            opts.LowerBounds = zeros(opts.N, 1);
-            opts.UpperBounds = ones(opts.N, 1);
+            opts.ConstraintsFunc = constraintsFunc;
         end
     end
 end
