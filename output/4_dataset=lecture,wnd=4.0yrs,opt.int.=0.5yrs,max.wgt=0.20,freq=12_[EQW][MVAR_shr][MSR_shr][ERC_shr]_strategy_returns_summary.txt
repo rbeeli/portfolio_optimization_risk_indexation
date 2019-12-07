@@ -1,0 +1,6 @@
+    "Asset"                              "Years"    "Ret p.a."    "Worst"    "Best"    "Vol p.a."    "Skew"     "Kurt" 
+    "1/N"                                "44"       "6.83"        "-0.12"    "0.08"    "8.65"        "-0.8"     "6.08" 
+    "Minimum Variance (shrinkage)"       "44"       "3.71"        "-0.01"    "0.02"    "1.68"        "0.11"     "4.34" 
+    "Maximum Sharpe Ratio (shrinka.."    "44"       "4.34"        "-0.07"    "0.04"    "3.44"        "-1.49"    "12.32"
+    "Equal Risk Contribution (shri.."    "44"       "4.9"         "-0.04"    "0.04"    "3.58"        "-0.45"    "5.07" 
+

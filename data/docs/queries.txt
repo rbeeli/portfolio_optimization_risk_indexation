@@ -1,0 +1,27 @@
+Compustat: Available indices
+================================
+
+SELECT conm, gvkeyx, idx13key, idxcstflg, idxstat, indexcat, indexgeo, indexid, indextype, indexval, spii, spmi, tic, tici
+FROM comp.idx_index;
+
+SELECT gvkeyx, conm, indextype, tic, spii, spmi, indexcat
+FROM comp.names_ix;
+
+
+
+
+Compustat: Company names
+=======================3
+
+SELECT gvkey, conm, tic, cusip, cik, sic, naics, gsubind, gind, year1, year2
+FROM comp.names;
+
+
+
+
+Compustat: Index constituents
+============================
+
+SELECT gvkey, iid, gvkeyx, "from", thru
+FROM compm.idxcst_his ich
+where ich.gvkeyx='000005'

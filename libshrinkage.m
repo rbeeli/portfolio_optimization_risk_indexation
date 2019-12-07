@@ -1,13 +1,20 @@
+% --------------------------------------------------------------
+% Author:   Rino Beeli
+% Created:  12.2019
+%
+% Copyright (c) <2019>, <rinoDOTbeeli(at)uzhDOTch>
+%
+% All rights reserved.
+% --------------------------------------------------------------
+
 function funcs = libshrinkage()
     funcs.oas = @(data) computeShrinkage(data, 'oas');
 end
 
-
-
 % -------------------------------------------------------------------------------------------------
-% https://ch.mathworks.com/matlabcentral/fileexchange/57674-shrinkage-algorithms-for-covariance-matrix-estimation
 
 function [sigma, rho] = computeShrinkage(X, est)
+    % https://ch.mathworks.com/matlabcentral/fileexchange/57674-shrinkage-algorithms-for-covariance-matrix-estimation
     % this program is distributed under BSD 2-Clause license
     %
     % Copyright (c) <2016>, <Okba BEKHELIFI, okba.bekhelifi@univ-usto.dz>

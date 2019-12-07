@@ -1,6 +1,7 @@
 classdef Constraints
     % Defines weight constraints for portfolio constituents,
     % used by the portfolio optimizer.
+    % See Matlab documentation of function "quadprog" for details.
     
     properties
         % Constituent weights lower bounds.
@@ -8,12 +9,17 @@ classdef Constraints
         
         % Constituent weights upper bounds.
         UpperBounds
-    end
-    
-    methods
-        function constraints = Constraints(lowerBounds, upperBounds)
-            constraints.LowerBounds = lowerBounds;
-            constraints.UpperBounds = upperBounds;
-        end
+        
+        % Inequality constraints matrix A
+        A
+        
+        % Inequality constraints vector b
+        b
+        
+        % Equality constraints matrix Aeq
+        Aeq
+        
+        % Equality constraints vector beq
+        beq
     end
 end

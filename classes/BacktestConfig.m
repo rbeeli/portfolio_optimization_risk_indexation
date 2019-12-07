@@ -12,6 +12,7 @@ classdef BacktestConfig
     
     properties
         Name
+        Label
         ExpectedRetsFunc
         ExpectedRetsDataFunc
         CovFunc
@@ -26,8 +27,9 @@ classdef BacktestConfig
     end
     
     methods
-        function obj = BacktestConfig(name)
+        function obj = BacktestConfig(name, label)
             obj.Name = name;
+            obj.Label = label;
             obj.StartIndex = 1;
         end
     end

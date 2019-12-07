@@ -1,0 +1,5 @@
+    'Maximum Sharpe Ratio'                [0.8835]
+    'Maximum Sharpe Ratio (shrinkage)'    [0.8650]
+    'Minimum Variance'                    [0.9143]
+    'Minimum Variance (shrinkage)'        [0.9304]
+

@@ -1,7 +1,19 @@
+% --------------------------------------------------------------
+% Author:   Rino Beeli
+% Created:  12.2019
+%
+% Copyright (c) <2019>, <rinoDOTbeeli(at)uzhDOTch>
+%
+% All rights reserved.
+% --------------------------------------------------------------
+
 function funcs = libvisualize()
     funcs.plotReturns = @plotReturns;
     funcs.plotWeights = @plotWeights;
     funcs.newFigure = @newFigure;
+    funcs.setPrintOptions = @setPrintOptions;
+    funcs.printFigure = @printFigure;
+    funcs.calcGridSize = @calcGridSize;
 end
 
 
@@ -51,7 +63,8 @@ function plotWeights(plotTitle, wgts, labels, yAxisLabel, colorFunc)
     end
     
     % axis ranges
-    axis([0 size(wgts, 1) 0 100])
+    xlim([0 size(wgts, 1)]);
+    ylim([0 100]);
     
     % legend
     if size(wgts, 2) <= 20
@@ -63,22 +76,47 @@ function plotWeights(plotTitle, wgts, labels, yAxisLabel, colorFunc)
     % title
     title(plotTitle)
     
-    % y-axis label
+    % y-axis ticks/labels
+    set(gca, 'YTick', 0:20:100)
     if ~isempty(yAxisLabel)
         ylabel(yAxisLabel);
     end
 
-    % x-axis tick labels (year)
+    % x-axis ticks/labels (year)
     ticks = 1:(floor(size(wgts, 1) / 12)):size(wgts, 1);
     set(gca, 'XTick', ticks)
     set(gca, 'XTickLabel', datestr(wgts.Date(ticks), 'yyyy'))
 end
 
 
-function f = newFigure(titleStr, maximize)
-    f = figure('Name',titleStr, 'NumberTitle','off');
-    
-    if nargin > 1 && maximize
-       f.WindowState = 'maximized';
+function f = newFigure(titleStr, x, y, width, height)
+    f = figure('Name',titleStr, 'NumberTitle','off', 'Position', [x y width height]); 
+end
+
+
+function setPrintOptions(fig)
+    % print options to reflect window sizing
+    fig.PaperPositionMode = 'auto';
+    fig_pos = fig.PaperPosition;
+    fig.PaperSize = [fig_pos(3) fig_pos(4)];
+end
+
+
+function printFigure(fig, path)
+    print(fig, '-dpdf', '-painters', path);
+end
+
+
+function [x, y] = calcGridSize(N)
+    if N == 2
+        x = 2;
+        y = 1;
+    elseif N == 6
+        x = 3;
+        y = 2;
+    else
+        x = ceil(sqrt(N));
+        y = ceil(sqrt(N));
     end
 end
+

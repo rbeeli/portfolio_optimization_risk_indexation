@@ -1,3 +1,12 @@
+% --------------------------------------------------------------
+% Author:   Rino Beeli
+% Created:  12.2019
+%
+% Copyright (c) <2019>, <rinoDOTbeeli(at)uzhDOTch>
+%
+% All rights reserved.
+% --------------------------------------------------------------
+%
 % This library deals with the estimation of covariance matrices.
 % Two methods are provided currently:
 %  1. Historical sample covariance estimate

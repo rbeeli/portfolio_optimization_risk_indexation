@@ -1,0 +1,6 @@
+    "Asset Class"                       "Years"    "Return p.a."    "Worst"    "Best"    "Volatility p.a."    "Skewness"    "Kurtosis"
+    "Maximum Sharpe Ratio"              "44"       "4.74"           "-0.09"    "0.05"    "4.18"               "-1.35"       "12.8"    
+    "Maximum Sharpe Ratio (perfec.."    "44"       "6.84"           "-0.03"    "0.05"    "3.36"               "0.28"        "4.43"    
+    "Minimum Variance"                  "44"       "4.14"           "-0.03"    "0.04"    "2.91"               "-0.19"       "4.63"    
+    "Equal Risk Contribution"           "44"       "5.77"           "-0.04"    "0.04"    "4.07"               "-0.1"        "4.58"    
+

@@ -1,0 +1,4 @@
+    "Asset"                              "Years"    "Ret p.a."    "Worst"    "Best"    "Vol p.a."    "Skew"     "Kurt"
+    "Maximum Sharpe Ratio (perfect.."    "43"       "25.39"       "-0.2"     "0.16"    "13.78"       "-0.27"    "4.89"
+    "Maximum Sharpe Ratio (perfect.."    "43"       "25.31"       "-0.19"    "0.15"    "13.84"       "-0.3"     "4.72"
+

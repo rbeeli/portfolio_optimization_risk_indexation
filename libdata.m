@@ -1,12 +1,28 @@
+% --------------------------------------------------------------
+% Author:   Rino Beeli
+% Created:  12.2019
+%
+% Copyright (c) <2019>, <rinoDOTbeeli(at)uzhDOTch>
+%
+% All rights reserved.
+% --------------------------------------------------------------
+
 function funcs = libdata()
+    % datasets
     funcs.readLectureDataset = @readLectureDataset;
+    funcs.readLectureNoCashDataset = @readLectureNoCashDataset;
+    funcs.readSP500Dataset = @readSP500Dataset;
+    funcs.readNASDAQ100Dataset = @readNASDAQ100Dataset;
+    funcs.readDJIA30Dataset = @readDJIA30Dataset;
+    
+    % Strategic asset allocation
     funcs.readSAA = @readSAA;
+    
+    % calculation functions
     funcs.cumulativeReturns = @cumulativeReturns;
     funcs.summaryStats = @summaryStats;
-    funcs.readSP500Dataset = @readSP500Dataset;
     funcs.sharpeRatio = @sharpeRatio;
     funcs.extractWindow = @extractWindow;
-    funcs.readNASDAQ100Dataset = @readNASDAQ100Dataset;
 end
 
 
@@ -22,7 +38,10 @@ function SAA = readSAA()
     SAA = T;
 end
 
-function [indexRets, stockRets, frequency] = readSP500Dataset()
+function [name, indexRets, stockRets, frequency] = readSP500Dataset()
+    % technical name of dataset
+    name = 'SP500';
+    
     % read Excel
     indexRets = readtable('data/SP500/sp500_index_monthly.csv', 'ReadVariableNames',true, 'PreserveVariableNames',true);
     stockRets = readtable('data/SP500/sp500_stock_returns.csv', 'ReadVariableNames',true, 'PreserveVariableNames',true);
@@ -44,7 +63,10 @@ function [indexRets, stockRets, frequency] = readSP500Dataset()
 end
 
 
-function [stockRets, frequency] = readNASDAQ100Dataset()
+function [name, stockRets, frequency] = readNASDAQ100Dataset()
+    % technical name of dataset
+    name = 'NASDAQ100';
+    
     % read Excel
     stockRets = readtable('data/NASDAQ-100/NASDAQ-100_stocks_monthly_wide.csv', 'ReadVariableNames',true, 'PreserveVariableNames',true);
     
@@ -62,7 +84,41 @@ function [stockRets, frequency] = readNASDAQ100Dataset()
 end
 
 
-function [returns, frequency] = readLectureDataset()
+function [name, stockRets, frequency] = readDJIA30Dataset()
+    % technical name of dataset
+    name = 'DJIA30';
+    
+    % read Excel
+    stockRets = readtable('data/DJIA30/DJIA_stocks_monthly_wide.csv', 'ReadVariableNames',true, 'PreserveVariableNames',true);
+    
+    % rename columns
+    stockRets.Properties.VariableNames(1) = {'Date'};
+
+    % parse date
+    stockRets.Date = datetime(stockRets.Date, 'InputFormat', 'yyyy-MM-dd');
+    
+    % convert to timetable
+    stockRets = table2timetable(stockRets);
+    
+    % monthly data
+    frequency = 12;
+end
+
+
+function [name, returns, frequency] = readLectureNoCashDataset()
+    [name, returns, frequency] = readLectureDataset();
+    name = 'lectureNoCash';
+    
+    returns = removevars(returns, {
+        'Cash CHF'
+    });
+end
+
+
+function [name, returns, frequency] = readLectureDataset()
+    % technical name of dataset
+    name = 'lecture';
+    
     % read Excel
     returns = readtable('data/lecture_dataset/Seminar APT 2019 - Returns V2.xlsx', 'ReadVariableNames',true, 'PreserveVariableNames',true);
     returns.Properties.VariableNames(1) = {'Date'};
@@ -129,7 +185,7 @@ function stats = summaryStats(simpleRets, frequency)
         end
     end
     
-    colNames = [{'Asset Class'} {'Years'} {'Return p.a.'} {'Worst'}  {'Best'} {'Volatility p.a.'} {'Skewness'} {'Kurtosis'}];
+    colNames = [{'Asset'} {'Years'} {'Ret p.a.'} {'Worst'}  {'Best'} {'Vol p.a.'} {'Skew'} {'Kurt'}];
     rowNames = simpleRets.Properties.VariableNames';
     tableData = string([round(years) round([statReturns statWorst statBest statVol statSkew statKurt]*100)/100]);
     stats = [colNames; rowNames tableData];

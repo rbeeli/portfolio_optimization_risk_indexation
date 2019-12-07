@@ -1,0 +1,5 @@
+    '1/N'                                         [0.8091]
+    'Minimum Variance (shrinkage, SAA)'           [1.0243]
+    'Maximum Sharpe Ratio (shrinkage, SAA)'       [0.8733]
+    'Equal Risk Contribution (shrinkage, SAA)'    [0.9684]
+

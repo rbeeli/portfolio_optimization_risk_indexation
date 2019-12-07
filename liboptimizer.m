@@ -1,52 +1,42 @@
+% --------------------------------------------------------------
+% Author:   Rino Beeli
+% Created:  12.2019
+%
+% Copyright (c) <2019>, <rinoDOTbeeli(at)uzhDOTch>
+%
+% All rights reserved.
+% --------------------------------------------------------------
+
 function funcs = liboptimizer()
     funcs.EqualWeights = @EqualWeights;
     funcs.MinVariance = @MinVariance;
-    funcs.MinVarianceConstrained = @MinVarianceConstrained;
     funcs.MaxSharpeRatio = @MaxSharpeRatio;
     funcs.EqualRiskContribution = @EqualRiskContribution;
 end
 
 
 function weights = EqualWeights(optParams)
-    weight = 1/optParams.N;
-    weights = repelem(weight, optParams.N)';
+    weights = repelem(1/optParams.N, optParams.N)';
 end
 
 
 function weights = MinVariance(optParams)
     f = zeros(1, optParams.N);
-    Aeq = ones(1, optParams.N);
-    beq = 1;
-    lb = zeros(optParams.N, 1);
-    ub = ones(optParams.N, 1);
     
-    % define inequality constraints
-    A = [zeros(1, optParams.N); zeros(1, optParams.N)];
-    b = [1; 1];
-    
-    % scale covariance matrix by large factor for
-    % increased optimization accuracy
-    H = optParams.CovMat * 10^10;
-    
-    % find minimum variance weigths
-    opts = optimset('Algorithm','interior-point-convex', 'Display','off');
-    weights = quadprog(H, f, A, b, Aeq, beq, lb, ub, [], opts);
-end
-
-
-function weights = MinVarianceConstrained(optParams)
-    f = zeros(1, optParams.N);
-    Aeq = ones(1, optParams.N);
-    beq = 1;
-    
-    % compute weight constraints
+    % compute constraints
     constraints = optParams.ConstraintsFunc(optParams);
+    
+    % lower/upper bounds
     lb = constraints.LowerBounds;
     ub = constraints.UpperBounds;
     
-    % define inequality constraints
-    A = [zeros(1, optParams.N); zeros(1, optParams.N)];
-    b = [1; 1];
+    % equality constraints
+    Aeq = constraints.Aeq;
+    beq = constraints.beq;
+    
+    % inequality constraints
+    A = constraints.A;
+    b = constraints.b;
     
     % scale covariance matrix by large factor for
     % increased optimization accuracy
@@ -61,24 +51,37 @@ end
 function weights = MaxSharpeRatio(optParams)
     % http://people.stat.sc.edu/sshen/events/backtesting/reference/maximizing%20the%20sharpe%20ratio.pdf
     
-    lb = zeros(optParams.N, 1);
-    ub = ones(optParams.N, 1);
-    
     p = Portfolio('AssetMean',optParams.ExpRets, ...
                   'AssetCovar',optParams.CovMat);
-    
-    % constraints
-    p = setDefaultConstraints(p);
-    p = setBounds(p, lb, ub);
 
-    p = setSolver(p,'quadprog', ...
-                    'Algorithm','interior-point-convex', ...
-                    'Display','off', ...
-                    'ConstraintTolerance',1.0e-10, ...
-                    'OptimalityTolerance',1.0e-10, ...
-                    'StepTolerance',1.0e-10, ...
-                    'MaxIterations',10000);
-    weights = estimateMaxSharpeRatio(p); 
+    % initial weights (equal weighted)
+    p = setInitPort(p, 1/optParams.N, optParams.N);
+    
+    % compute constraints
+    constraints = optParams.ConstraintsFunc(optParams);
+    
+    % lower/upper bounds
+    p = setBounds(p, constraints.LowerBounds, constraints.UpperBounds);
+    
+    % equality constraints
+    p = setEquality(p, constraints.Aeq, constraints.beq);
+    
+    % inequality constraints
+    p = setInequality(p, constraints.A, constraints.b);
+    
+    try
+        weights = estimateMaxSharpeRatio(p); 
+    catch ME
+        if (strcmp(ME.identifier, 'finance:Portfolio:estimateMaxSharpeRatio:CannotObtainMaximum'))
+            disp('Max. Sharpe Ratio Optimization failed:');
+            disp(ME.message);
+            disp('Using equal weights');
+            
+            weights = repelem(1/optParams.N, optParams.N)';
+        else
+            rethrow(ME)
+        end
+    end 
     
 %     nAssets = size(expectedRets, 2);
 %     V0 = zeros(1, nAssets);
@@ -123,15 +126,23 @@ end
 
 
 function weights = EqualRiskContribution(optParams)
-    nAssets = size(optParams.CovMat, 1);
+    % compute constraints
+    constraints = optParams.ConstraintsFunc(optParams);
     
+    % lower/upper bounds
+    lb = constraints.LowerBounds;
+    ub = constraints.UpperBounds;
+    
+    % equality constraints
+    Aeq = constraints.Aeq;
+    beq = constraints.beq;
+    
+    % inequality constraints
+    A = constraints.A;
+    b = constraints.b;
     
     % initial weights (equal weighted)
-    x0 = 1/nAssets * ones(optParams.N, 1);
-    Aeq = ones(1, optParams.N);
-    beq = 1;
-    lb = zeros(optParams.N, 1);
-    ub = ones(optParams.N, 1);
+    x0 = 1/optParams.N * ones(optParams.N, 1);
     
     % scale covariance matrix by large factor for increased optimization accuracy
     Sigma = optParams.CovMat * 10^14;
@@ -139,7 +150,7 @@ function weights = EqualRiskContribution(optParams)
     % Sequential Quadratic Programming (SQP) algorithm
     fun = @(W) var(W.*(Sigma*W));
     opts = optimset('Display', 'off');
-    weights = fmincon(fun, x0, [], [], Aeq, beq, lb, ub, [], opts);
+    weights = fmincon(fun, x0, A, b, Aeq, beq, lb, ub, [], opts);
 end
 
 

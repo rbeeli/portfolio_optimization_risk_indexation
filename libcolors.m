@@ -1,3 +1,12 @@
+% --------------------------------------------------------------
+% Author:   Rino Beeli
+% Created:  12.2019
+%
+% Copyright (c) <2019>, <rinoDOTbeeli(at)uzhDOTch>
+%
+% All rights reserved.
+% --------------------------------------------------------------
+
 function funcs = libcolors()
     funcs.distinctColors = @distinctColors;
     funcs.gradientColors = @gradientColors;
@@ -18,7 +27,11 @@ function colors = distinctColors(count)
         ];
     end
 
-    colors = distinctPalette(1:count, :);
+    if size(distinctPalette, 1) < count
+        colors = hsv(count);  % fallback if too many colors requested
+    else
+        colors = distinctPalette(1:count, :);
+    end
 end
 
 
@@ -37,7 +50,11 @@ function colors = gradientColors(count)
         ];
     end
     
-    colors = gradientPalette(1:count, :);
+    if size(gradientPalette, 1) < count
+        colors = hsv(count);  % fallback if too many colors requested
+    else
+        colors = gradientPalette(1:count, :);
+    end
 end
 
 
