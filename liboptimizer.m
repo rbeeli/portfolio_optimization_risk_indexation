@@ -128,15 +128,15 @@ function weights = EqualRiskContribution(optParams)
     % compute constraints
     constraints = optParams.ConstraintsFunc(optParams);
     
-    % lower/upper bounds
+    % lower/upper bounds (lb <= x <= ub)
     lb = constraints.LowerBounds + 0.05/optParams.N; % lower bound not equal 0 helps convergence!
     ub = constraints.UpperBounds;
     
-    % equality constraints
+    % equality constraints (Aeq*x = beq)
     Aeq = constraints.Aeq;
     beq = constraints.beq;
     
-    % inequality constraints
+    % inequality constraints (A*x < b)
     A = constraints.A;
     b = constraints.b;
     
