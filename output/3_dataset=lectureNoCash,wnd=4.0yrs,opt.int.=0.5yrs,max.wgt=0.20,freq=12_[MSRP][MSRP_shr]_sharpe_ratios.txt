@@ -1,3 +1,0 @@
-    'Maximum Sharpe Ratio (perfect information)'               [1.9924]
-    'Maximum Sharpe Ratio (perfect information, shrinkage)'    [1.8726]
-

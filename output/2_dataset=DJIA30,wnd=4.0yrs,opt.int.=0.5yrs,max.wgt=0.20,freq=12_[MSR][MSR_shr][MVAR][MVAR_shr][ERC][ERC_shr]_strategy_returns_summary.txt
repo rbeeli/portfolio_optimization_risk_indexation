@@ -1,0 +1,8 @@
+    Entity                        Years    SR      Ret p.a.    Worst    Best    Vol p.a.    Skew     Kurt
+    Maximum Sharpe Ratio          43       0.88    12.15       -0.14    0.17    14.17       -0.09    4.01
+    Maximum Sharpe Ratio (sh..    43       0.86    11.81       -0.14    0.17    14.12       -0.15    4.03
+    Minimum Variance              43       0.91    11.39       -0.16    0.14    12.74       -0.23    4.59
+    Minimum Variance (shrink..    43       0.93    11.57       -0.17    0.13    12.69       -0.32    4.84
+    Equal Risk Contribution       43       0.86    11.58       -0.22    0.14    13.98       -0.52    5.55
+    Equal Risk Contribution ..    43       0.85    11.57       -0.22    0.14    14.04       -0.52    5.55
+

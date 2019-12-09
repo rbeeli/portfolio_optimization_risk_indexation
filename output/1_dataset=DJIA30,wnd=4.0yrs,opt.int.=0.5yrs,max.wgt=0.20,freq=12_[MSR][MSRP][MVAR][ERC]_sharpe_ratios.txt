@@ -1,5 +1,0 @@
-    'Maximum Sharpe Ratio'                          [0.8835]
-    'Maximum Sharpe Ratio (perfect information)'    [1.7261]
-    'Minimum Variance'                              [0.9143]
-    'Equal Risk Contribution'                       [0.8603]
-

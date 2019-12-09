@@ -15,7 +15,7 @@ function funcs = libdata()
     funcs.readNASDAQ100Dataset = @readNASDAQ100Dataset;
     funcs.readDJIA30Dataset = @readDJIA30Dataset;
     
-    % Strategic asset allocation
+    % Strategic Asset Allocation
     funcs.readSAA = @readSAA;
     
     % calculation functions
@@ -163,6 +163,7 @@ function stats = summaryStats(simpleRets, frequency)
     years = periods'/frequency;
     cumRets = cumulativeReturns(simpleRets);
     
+    statSR = NaN(nAssets, 1);
     statReturns = NaN(nAssets, 1);
     statWorst = NaN(nAssets, 1);
     statBest = NaN(nAssets, 1);
@@ -176,6 +177,7 @@ function stats = summaryStats(simpleRets, frequency)
         assetCumRets = cumRets{dataIndices, col};
         
         if size(assetSimpleRets, 1) > 0
+            statSR(col) = sqrt(frequency) * mean(assetSimpleRets) / std(assetSimpleRets);
             statReturns(col) = 100 * (assetCumRets(end) ^ (frequency/periods(col)) - 1);
             statVol(col) = 100 * sqrt(frequency) * std(assetSimpleRets);
             statSkew(col) = skewness(assetSimpleRets);
@@ -185,9 +187,9 @@ function stats = summaryStats(simpleRets, frequency)
         end
     end
     
-    colNames = [{'Asset'} {'Years'} {'Ret p.a.'} {'Worst'}  {'Best'} {'Vol p.a.'} {'Skew'} {'Kurt'}];
+    colNames = [{'Entity'} {'Years'} {'SR'} {'Ret p.a.'} {'Worst'}  {'Best'} {'Vol p.a.'} {'Skew'} {'Kurt'}];
     rowNames = simpleRets.Properties.VariableNames';
-    tableData = string([round(years) round([statReturns statWorst statBest statVol statSkew statKurt]*100)/100]);
+    tableData = string([round(years) round([statSR statReturns statWorst statBest statVol statSkew statKurt]*100)/100]);
     stats = [colNames; rowNames tableData];
 end
 

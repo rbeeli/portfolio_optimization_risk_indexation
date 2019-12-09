@@ -1,6 +1,0 @@
-    "Asset Class"                       "Years"    "Return p.a."    "Worst"    "Best"    "Volatility p.a."    "Skewness"    "Kurtosis"
-    "Maximum Sharpe Ratio"              "44"       "4.74"           "-0.09"    "0.05"    "4.18"               "-1.35"       "12.8"    
-    "Maximum Sharpe Ratio (shrink.."    "44"       "5.29"           "-0.1"     "0.07"    "5.2"                "-1.07"       "10.94"   
-    "Minimum Variance"                  "44"       "4.14"           "-0.03"    "0.04"    "2.91"               "-0.19"       "4.63"    
-    "Minimum Variance (shrinkage)"      "44"       "4.58"           "-0.03"    "0.04"    "3.01"               "0.03"        "5"       
-

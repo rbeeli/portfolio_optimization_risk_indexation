@@ -1,3 +1,0 @@
-    '1/N'                                                    [0.8091]
-    'Minimum Variance (shrinkage)'                           [2.1725]
-    'Minimum Variance (shrinkage, 20

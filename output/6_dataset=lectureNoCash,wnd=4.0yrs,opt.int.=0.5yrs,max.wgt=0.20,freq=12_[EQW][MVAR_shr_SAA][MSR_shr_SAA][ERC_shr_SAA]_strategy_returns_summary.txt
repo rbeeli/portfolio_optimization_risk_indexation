@@ -1,6 +1,6 @@
-    "Asset Class"                       "Years"    "Return p.a."    "Worst"    "Best"    "Volatility p.a."    "Skewness"    "Kurtosis"
-    "1/N"                               "44"       "7.17"           "-0.14"    "0.09"    "9.46"               "-0.8"        "6.09"    
-    "Minimum Variance (shrinkage,.."    "44"       "6.22"           "-0.09"    "0.08"    "6.07"               "-0.43"       "5.75"    
-    "Maximum Sharpe Ratio (shrink.."    "44"       "6.76"           "-0.12"    "0.1"     "7.98"               "-0.78"       "6.74"    
-    "Equal Risk Contribution (shr.."    "44"       "6.34"           "-0.09"    "0.07"    "6.69"               "-0.66"       "5.95"    
+    Entity                         Years    SR      Ret p.a.    Worst    Best    Vol p.a.    Skew     Kurt
+    1/N                            44       0.78    7.17        -0.14    0.09    9.46        -0.8     6.09
+    Minimum Variance (shrinka..    44       1.03    6.22        -0.09    0.08    6.07        -0.43    5.75
+    Maximum Sharpe Ratio (shr..    44       0.92    7.23        -0.12    0.09    7.92        -0.62    6.6 
+    Equal Risk Contribution (..    44       0.96    6.38        -0.09    0.07    6.73        -0.66    5.89
 

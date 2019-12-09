@@ -38,8 +38,7 @@ function weights = MinVariance(optParams)
     A = constraints.A;
     b = constraints.b;
     
-    % scale covariance matrix by large factor for
-    % increased optimization accuracy
+    % scale covariance matrix for increased optimization accuracy
     H = optParams.CovMat * 10^10;
     
     % find minimum variance weigths
@@ -130,7 +129,7 @@ function weights = EqualRiskContribution(optParams)
     constraints = optParams.ConstraintsFunc(optParams);
     
     % lower/upper bounds
-    lb = constraints.LowerBounds;
+    lb = constraints.LowerBounds + 0.05/optParams.N; % lower bound not equal 0 helps convergence!
     ub = constraints.UpperBounds;
     
     % equality constraints
@@ -149,7 +148,7 @@ function weights = EqualRiskContribution(optParams)
     
     % Sequential Quadratic Programming (SQP) algorithm
     fun = @(W) var(W.*(Sigma*W));
-    opts = optimset('Display', 'off');
+    opts = optimset('Display','off', 'Algorithm','sqp');
     weights = fmincon(fun, x0, A, b, Aeq, beq, lb, ub, [], opts);
 end
 
